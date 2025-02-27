@@ -1,0 +1,62 @@
+# tasks file for post-install
+---
+- name: Install NTP agent on CentOS
+  yum:
+    pkg: chrony
+    state: present
+  when: ansible_distribution == "CentOS"
+
+- name: Install NTP agent on Ubuntu
+  apt:
+    pkg: ntp
+    state: present
+    update_cache: yes
+  when: ansible_distribution == "Ubuntu"
+
+- name: Start and enable NTP service on CentOS
+  service:
+    name: chronyd
+    state: started
+    enabled: yes
+  when: ansible_distribution == "CentOS"
+
+- name: Start and enable NTP service on Ubuntu
+  service:
+    name: ntp
+    state: started
+    enabled: yes
+  when: ansible_distribution == "Ubuntu"
+
+- name: Banner file
+  copy:
+    content: '# This server is managed by ansible. No manual changes please'
+    dest: /etc/motd
+
+- name: create a folder
+  file:
+    path: "{{mydir}}"
+    state: directory
+
+- name: Deploy ntp agent on centos
+  template:
+    src: ntpconf_centos.j2
+    dest: /etc/chrony.conf
+    backup: yes
+  when: ansible_distribution == "CentOS"
+  notify:
+    restart service on centos
+
+- name: Deploy ntp agent on ubuntu
+  template:
+    src: ntpconf_ubantu.j2
+    dest: /etc/ntpsec/ntp.conf
+    backup: yes
+  when: ansible_distribution == "Ubuntu"
+  notify:
+    restart service on ubuntu
+
+- name: Dump File
+  copy:
+    src: myfile.txt
+    dest: /tmp/myfile.txt
+
